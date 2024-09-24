@@ -45,7 +45,7 @@ def white_paper(message):
     try:
         bot.send_document(
             chat_id,
-            "bqacaguaaxkdaamszvgtrpjdrfckizjbgp5m93zg6t8aaruraak-ozbxwzftpyid1re2ba",
+            "BQACAgUAAyEGAASMAc6ZAAM3ZvKSFE1Mj4ZJ3MksBalRTIF15s8AAtsTAAI0JphXM7E_jzcS-X42BA",
         )
         logger.info("whitepaper sent successfully")
     except Exception as e:  # Use 'Exception' to catch errors
