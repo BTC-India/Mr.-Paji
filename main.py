@@ -3,9 +3,10 @@ import logging
 import random
 import telebot
 from configuration.config import API_TOKEN
+from utils.emojis import EMOJIS
 import utils.logger as logger_save
 from telebot.types import InputFile, InputMediaDocument, ChatMemberUpdated
-import utils.emojis as emojis
+
 
 # Configuring logging
 logging.basicConfig(level=logging.INFO)
@@ -24,7 +25,7 @@ bot = telebot.TeleBot(API_TOKEN, threaded=True, num_threads=4)
 def gm(message):
     username = message.from_user.username
     chat_id = message.chat.id
-    random_emoji = random.choice(emojis.EMOJIS)
+    random_emoji = random.choice(EMOJIS)
 
     # Logging when a user sends a /gm command
     logger.info(f"Received /gm command from {username} (chat_id: {chat_id})")
