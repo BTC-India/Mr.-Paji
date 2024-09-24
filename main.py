@@ -5,7 +5,15 @@ import telebot
 from configuration.config import API_TOKEN
 from utils.emojis import EMOJIS
 import utils.logger as logger_save
-from telebot.types import InputFile, InputMediaDocument, ChatMemberUpdated
+from telebot.util import update_types
+from telebot.types import (
+    InputFile,
+    ReplyKeyboardMarkup,
+    KeyboardButton,
+    ChatMemberUpdated,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+)
 
 
 # Configuring logging
@@ -44,8 +52,8 @@ def white_paper(message):
     logger.info(f"sending whitepaper to user with chat_id: {chat_id}")
 
     try:
-        bot.reply_to(
-            message,
+        bot.send_document(
+            chat_id,
             "BQACAgUAAyEGAASMAc6ZAAM3ZvKSFE1Mj4ZJ3MksBalRTIF15s8AAtsTAAI0JphXM7E_jzcS-X42BA",
         )
         logger.info("whitepaper sent successfully")
@@ -55,7 +63,7 @@ def white_paper(message):
 
 # /price : shows realtime value of BTC in INR
 @bot.message_handler(commands=["price"])
-def value(message):
+def price(message):
     chat_id = message.chat.id
     # log when user requests the value
     logger.info(f"sending btc value to user with chat_id: {chat_id}")
@@ -73,24 +81,35 @@ def value(message):
         logger.error(f"failed to fetch btc value: {e}")
 
 
+# /social shares social links
+@bot.message_handler(commands=["social"])
+def social(message):
+    username = message.from_user.username
+    chat_id = message.chat.id
+    logger.info(f"sending social link user: {username} on chat_id: {chat_id}")
+
+    markup = InlineKeyboardMarkup()
+    group = InlineKeyboardButton(text="𝕏", url="https://x.com/btcindia_org")
+
+    # add the button to markup
+    markup.add(group)
+
+    # display this markup:
+    bot.reply_to(
+        message,
+        "Follow us on our socials so you don't miss any updates!",
+        reply_markup=markup,
+    )
+
+
 # welcome
 @bot.chat_member_handler()
 def on_c(c: ChatMemberUpdated):
-    chat_id = c.chat.id
     print("c in on_c:", c)
-    if (
-        c.new_chat_member
-        and c.new_chat_member.status == "member"
-        and (
-            not c.old_chat_member
-            or (c.old_chat_member and c.old_chat_member.status == "kicked")
-        )
-    ):
-        bot.send_message(chat_id, f"gm, new member joined")
+    chat_id = c.chat.id
+    bot.send_message(chat_id, f"gm, {c.from_user.first_name}")
 
 
-# welcome message like in discord
-# /social shares social links
 # /askme [FAQ] use AI/ML if required
 # /venue : venue details
 # /countdown : countdown till event
@@ -109,4 +128,4 @@ bot.load_next_step_handlers()
 logger.info("Bot started and polling...")
 
 # Start polling (infinite loop to keep the bot running)
-bot.infinity_polling()
+bot.infinity_polling(allowed_updates=update_types)
