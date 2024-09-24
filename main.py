@@ -5,6 +5,7 @@ import telebot
 from configuration.config import API_TOKEN
 import utils.logger as logger_save
 from telebot.types import InputFile, InputMediaDocument, ChatMemberUpdated
+import utils.emojis as emojis
 
 # Configuring logging
 logging.basicConfig(level=logging.INFO)
@@ -18,57 +19,12 @@ logger_save.init_logger(f"logs/botlog.log")
 bot = telebot.TeleBot(API_TOKEN, threaded=True, num_threads=4)
 
 
-EMOJIS = [
-    "😊",
-    "🫡",
-    "👋",
-    "🌞",
-    "🌟",
-    "🎉",
-    "✨",
-    "😁",
-    "👍",
-    "🚀",
-    "🤗",
-    "🌸",
-    "💫",
-    "🙌",
-    "😃",
-    "😎",
-    "🌈",
-    "🎈",
-    "🎊",
-    "🦄",
-    "💥",
-    "🥳",
-    "🔥",
-    "👏",
-    "🎶",
-    "🎁",
-    "💡",
-    "☀️",
-    "🍀",
-    "🌻",
-    "🦋",
-    "🌼",
-    "🌺",
-    "🌀",
-    "🌍",
-    "🕊️",
-    "🌹",
-    "🎵",
-    "⭐",
-    "💖",
-    "🥂",
-]
-
-
 # /gm command handler
 @bot.message_handler(commands=["gm"])
 def gm(message):
     username = message.from_user.username
     chat_id = message.chat.id
-    random_emoji = random.choice(EMOJIS)
+    random_emoji = random.choice(emojis.EMOJIS)
 
     # Logging when a user sends a /gm command
     logger.info(f"Received /gm command from {username} (chat_id: {chat_id})")
@@ -91,7 +47,7 @@ def white_paper(message):
             "bqacaguaaxkdaamszvgtrpjdrfckizjbgp5m93zg6t8aaruraak-ozbxwzftpyid1re2ba",
         )
         logger.info("whitepaper sent successfully")
-    except exception as e:
+    except Exception as e:  # Use 'Exception' to catch errors
         logger.error(f"failed to send whitepaper: {e}")
 
 
@@ -111,7 +67,7 @@ def value(message):
             f"{inr_value:,.2f}"  # Adds commas and rounds to 2 decimal places
         )
         bot.send_message(chat_id, f"1 BTC = ₹{formatted_value}")
-    except exception as e:
+    except Exception as e:
         logger.error(f"failed to fetch btc value: {e}")
 
 
