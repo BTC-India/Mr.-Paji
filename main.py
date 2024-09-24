@@ -21,7 +21,7 @@ bot = telebot.TeleBot(API_TOKEN, threaded=True, num_threads=4)
 
 
 # /gm command handler
-@bot.message_handler(commands=["gm"])
+@bot.message_handler(commands=["gm", "start"])
 def gm(message):
     username = message.from_user.username
     chat_id = message.chat.id
@@ -31,7 +31,8 @@ def gm(message):
     logger.info(f"Received /gm command from {username} (chat_id: {chat_id})")
 
     # Respond to the user with a good morning message
-    bot.send_message(chat_id, f"gm, {username} {random_emoji}")
+    # bot.send_message(chat_id, f"gm, {username} {random_emoji}")
+    bot.reply_to(message, f"gm, {username} {random_emoji}")
     return
 
 
@@ -43,8 +44,8 @@ def white_paper(message):
     logger.info(f"sending whitepaper to user with chat_id: {chat_id}")
 
     try:
-        bot.send_document(
-            chat_id,
+        bot.reply_to(
+            message,
             "BQACAgUAAyEGAASMAc6ZAAM3ZvKSFE1Mj4ZJ3MksBalRTIF15s8AAtsTAAI0JphXM7E_jzcS-X42BA",
         )
         logger.info("whitepaper sent successfully")
@@ -52,8 +53,8 @@ def white_paper(message):
         logger.error(f"failed to send whitepaper: {e}")
 
 
-# /value : shows realtime value of BTC in INR
-@bot.message_handler(commands=["value"])
+# /price : shows realtime value of BTC in INR
+@bot.message_handler(commands=["price"])
 def value(message):
     chat_id = message.chat.id
     # log when user requests the value
@@ -67,7 +68,7 @@ def value(message):
         formatted_value = (
             f"{inr_value:,.2f}"  # Adds commas and rounds to 2 decimal places
         )
-        bot.send_message(chat_id, f"1 BTC = ₹{formatted_value}")
+        bot.reply_to(message, f"1 BTC = ₹{formatted_value}")
     except Exception as e:
         logger.error(f"failed to fetch btc value: {e}")
 
