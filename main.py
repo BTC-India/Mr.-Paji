@@ -176,6 +176,23 @@ def inspire_quote(message):
         logger.error(f"Error fetching quote: {e}")
 
 
+# /hackathon command handler
+@bot.message_handler(commands=["hackathon"])
+def hackathon(message):
+    username = message.from_user.username
+    chat_id = message.chat.id
+    logger.info(f"sending hackathon info to user: {username} on chat_id: {chat_id}")
+
+    # Crafting a more exciting and detailed response
+    reply_message = (
+        "🚀 *Get Ready for an Epic 60-Hour Hackathon!* 💻\n\n"
+        "More details coming soon! Stay tuned.. ⏳"
+    )
+
+    # Sending the reply
+    bot.reply_to(message, reply_message, parse_mode="Markdown")
+
+
 # welcome
 # @bot.chat_member_handler()
 # def on_c(c: ChatMemberUpdated):
