@@ -193,6 +193,20 @@ def hackathon(message):
     bot.reply_to(message, reply_message, parse_mode="Markdown")
 
 
+# /venue command handler
+@bot.message_handler(commands=["venue"])
+def send_location(message):
+    chat_id = message.chat.id
+    latitude = 19.133222660801845
+    longitude = 72.91503099391358
+
+    # Logging the event
+    logger.info(f"sending location to user with chat_id: {chat_id}")
+
+    # Sending the location
+    bot.send_location(chat_id, latitude, longitude)
+
+
 # welcome
 # @bot.chat_member_handler()
 # def on_c(c: ChatMemberUpdated):
@@ -210,11 +224,9 @@ def hackathon(message):
 #
 
 # /askme [FAQ] use AI/ML if required
-# /venue : venue details
 # /speakers : list of speakers
 # /workshops : details of workshops
 # /hackathon : hackathon details
-# /inspire: share a inspire quote use external api
 
 # Enable saving next step handlers to file "./.handlers-saves/step.save"
 bot.enable_save_next_step_handlers(delay=2)
