@@ -116,6 +116,66 @@ def countdown(message):
     bot.reply_to(message, f"{days_remaining} more to go! 🚀")
 
 
+# /satoshi command handler
+@bot.message_handler(commands=["satoshi"])
+def satoshi_info(message):
+    chat_id = message.chat.id
+
+    # Satoshi Nakamoto's history and conspiracy theories
+    satoshi_message = (
+        "👤 *Satoshi Nakamoto* is the mysterious figure or group who created Bitcoin in 2008 and authored the Bitcoin whitepaper. "
+        "Satoshi introduced Bitcoin as a decentralized, peer-to-peer electronic cash system, allowing online payments to be sent directly without the need for a trusted third party.\n\n"
+        "🔍 After releasing the whitepaper, Nakamoto continued to contribute to Bitcoin development but disappeared from public view in 2011, leaving the community to carry on the project. "
+        "Satoshi's identity remains unknown, leading to many conspiracy theories:\n\n"
+        "1️⃣ *Satoshi was a government agency or group* – Some believe that a state or a group of researchers developed Bitcoin for financial or political reasons.\n"
+        "2️⃣ *Satoshi is an individual genius* – Some think Satoshi is a lone cryptography expert with deep knowledge of economics and technology.\n"
+        "3️⃣ *Satoshi faked his disappearance* – A common theory is that Satoshi staged his disappearance to avoid legal, financial, or social implications.\n"
+        "4️⃣ *Satoshi is dead* – Some believe Satoshi might have passed away, which explains the lack of communication since 2011.\n\n"
+        "🌐 Despite the mystery, Satoshi's legacy continues, with Bitcoin growing to be a major force in global finance. Whoever they are, their work has changed the world forever!"
+    )
+
+    markup = InlineKeyboardMarkup()
+    group = InlineKeyboardButton(text="₿", url="https://bitcoin.org/en/")
+
+    # add the button to markup
+    markup.add(group)
+
+    # Send the message
+    bot.send_message(
+        chat_id, satoshi_message, parse_mode="Markdown", reply_markup=markup
+    )
+
+
+# /inspire command handler
+@bot.message_handler(commands=["inspire"])
+def inspire_quote(message):
+    chat_id = message.chat.id
+
+    # Fetch a random quote from ZenQuotes API
+    try:
+        response = requests.get("https://zenquotes.io/api/random")
+        if response.status_code == 200:
+            quote_data = response.json()[
+                0
+            ]  # The API returns a list with a single dictionary
+
+            # Extract the quote and author
+            quote = quote_data["q"]
+            author = quote_data["a"]
+
+            # Format the message
+            inspire_message = f'"{quote}"\n\n— *{author}*'
+            bot.send_message(chat_id, inspire_message, parse_mode="Markdown")
+        else:
+            bot.send_message(
+                chat_id,
+                "Sorry, couldn't fetch the quote at this time. Please try again later.",
+            )
+    except Exception as e:
+        bot.send_message(chat_id, "An error occurred while fetching the quote.")
+        logger.error(f"Error fetching quote: {e}")
+
+
 # welcome
 # @bot.chat_member_handler()
 # def on_c(c: ChatMemberUpdated):
