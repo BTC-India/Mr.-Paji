@@ -2,6 +2,7 @@ import requests
 import logging
 import random
 import telebot
+from datetime import datetime
 from configuration.config import API_TOKEN
 from utils.emojis import EMOJIS
 import utils.logger as logger_save
@@ -102,17 +103,37 @@ def social(message):
     )
 
 
-# welcome
-@bot.chat_member_handler()
-def on_c(c: ChatMemberUpdated):
-    print("c in on_c:", c)
-    chat_id = c.chat.id
-    bot.send_message(chat_id, f"gm, {c.from_user.first_name}")
+# /countdown : countdown till event
+@bot.message_handler(commands=["countdown"])
+def countdown(message):
+    username = message.from_user.username
+    chat_id = message.chat.id
+    logger.info(f"sending countdown to user: {username} on chat_id: {chat_id}")
+    today = datetime.today()
+    target_date = datetime(today.year, 12, 16)
+    days_remaining = (target_date - today).days
+    print(f"Days remaining until December 1: {days_remaining}")
+    bot.reply_to(message, f"{days_remaining} more to go! 🚀")
 
+
+# welcome
+# @bot.chat_member_handler()
+# def on_c(c: ChatMemberUpdated):
+#     print("c in on_c:", c)
+#     chat_id = c.chat.id
+#     if (
+#         c.new_chat_member
+#         and c.new_chat_member.status == "member"
+#         and (
+#             not c.old_chat_member
+#             or (c.old_chat_member and c.old_chat_member.status == "kicked")
+#         )
+#     ):
+#         bot.send_message(chat_id, f"gm, {c.from_user.first_name}")
+#
 
 # /askme [FAQ] use AI/ML if required
 # /venue : venue details
-# /countdown : countdown till event
 # /speakers : list of speakers
 # /workshops : details of workshops
 # /hackathon : hackathon details
@@ -128,4 +149,5 @@ bot.load_next_step_handlers()
 logger.info("Bot started and polling...")
 
 # Start polling (infinite loop to keep the bot running)
-bot.infinity_polling(allowed_updates=update_types)
+# bot.infinity_polling(allowed_updates=update_types) # for welcome messages
+bot.infinity_polling()
