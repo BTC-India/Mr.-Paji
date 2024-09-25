@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "student-help-bot"
+name = "satbot"
 version = "0.1.0"
-authors = ["BYTEZx0 <BYTEZx0@gmail.com>"]
-description = "telegram bot students to get model question paper"
+authors = ["4rjunc <arjunmundamani@gmail.com>"]
+description = "official telegram bot of BTC India"
 readme = "README.md"
 
 [tool.poetry.dependencies]
