@@ -116,6 +116,57 @@ def countdown(message):
     bot.reply_to(message, f"{days_remaining} more to go! 🚀")
 
 
+# # Command to show the keyboard with an inline button
+# @bot.message_handler(commands=["resp"])
+# def reply(message):
+#     chat_id = message.chat.id
+#
+#     # Create an Inline Keyboard with a button
+#     keyboard = InlineKeyboardMarkup()
+#     button = InlineKeyboardButton(text="Received", callback_data="received")
+#
+#     button2 = InlineKeyboardButton(text="Not Received ", callback_data="nreceived")
+#     keyboard.add(button)
+#     keyboard.add(button2)
+#
+#     bot.send_message(
+#         chat_id, "Click the button to submit your info", reply_markup=keyboard
+#     )
+#
+#
+# @bot.message_handler(content_types=["photo"])
+# def handle_photo(message):
+#     # chat_id = message.chat.id
+#     chat_id = -1002340040662
+#     photo = message.photo[-1].file_id  # Get the highest resolution photo
+#     keyboard = InlineKeyboardMarkup()
+#     button = InlineKeyboardButton(text="Received", callback_data="received")
+#
+#     button2 = InlineKeyboardButton(text="Not Received ", callback_data="nreceived")
+#     keyboard.add(button)
+#     keyboard.add(button2)
+#
+#     # Log info
+#     bot.send_message(chat_id, "Photo received. Sending it back to you...")
+#
+#     # Send the photo back to the user
+#     bot.send_photo(
+#         chat_id, photo, caption="Here is the photo you sent!", reply_markup=keyboard
+#     )
+#
+#
+# # Handle the button click with callback_data
+# @bot.callback_query_handler(func=lambda call: True)
+# def handle_callback_query(call):
+#     user_chat_id = 990333293
+#     if call.data == "received":
+#         bot.send_message(user_chat_id, "Received")
+#     if call.data == "nreceived":
+#         bot.send_message(user_chat_id, "Not Received")
+#         # Here you can set up further handling to receive user input
+#
+
+
 # /satoshi command handler
 @bot.message_handler(commands=["satoshi"])
 def satoshi_info(message):
@@ -205,6 +256,28 @@ def send_location(message):
 
     # Sending the location
     bot.send_location(chat_id, latitude, longitude)
+
+
+# reply to gm messages
+@bot.message_handler(func=lambda msg: True)
+def echo_all(message):
+    # List of 'friend' in different languages
+    friends = [
+        "amigo",
+        "freund",
+        "ami",
+        "kaibigan",
+        "친구",
+        "友達",
+        "приятель",
+        "amico",
+        "dost",
+        "phít",
+    ]
+    if message.text.lower() == "gm":
+        friend_translation = random.choice(friends)
+        reply_message = f"{message.text}, {friend_translation}!"
+        bot.reply_to(message, reply_message)
 
 
 # welcome
