@@ -1,5 +1,7 @@
 import requests
 import logging
+import time
+import schedule
 import random
 import telebot
 from datetime import datetime
@@ -80,6 +82,17 @@ def price(message):
         bot.reply_to(message, f"1 BTC = ₹{formatted_value}")
     except Exception as e:
         logger.error(f"failed to fetch btc value: {e}")
+
+
+# Schedule to send Bitcoin price every 6 hours
+def schedule_btc_updates():
+    # Schedule the task every 6 hours
+    schedule.every(6).hours.do(price)
+
+    # Keep the schedule running in an infinite loop
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 
 
 # /social shares social links
