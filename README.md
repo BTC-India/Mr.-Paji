@@ -5,25 +5,25 @@
 ### Clone Repository
 
 ```bash
-git clone https://github.com/BYTEZx0/student-help-bot.git
+git clone https://github.com/BTC-India/satbot.git
 ```
 
 ### Change directory
 
 ```bash
-cd student-help-bot
-```
-
-### Setup environment
-
-```bash
-poetry install
+cd satbot
 ```
 
 ### Install modules
 
 ```bash
 poetry install
+```
+
+### Setup environment
+
+```bash
+poetry shell
 ```
 
 ### Create `.env`
