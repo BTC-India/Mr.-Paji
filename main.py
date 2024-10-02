@@ -11,6 +11,7 @@ import utils.logger as logger_save
 from telebot.util import update_types
 from telebot.types import (
     InputFile,
+    InputMediaPhoto,
     ReplyKeyboardMarkup,
     KeyboardButton,
     ChatMemberUpdated,
@@ -294,20 +295,33 @@ def echo_all(message):
 
 
 # welcome
-# @bot.chat_member_handler()
-# def on_c(c: ChatMemberUpdated):
-#     print("c in on_c:", c)
-#     chat_id = c.chat.id
-#     if (
-#         c.new_chat_member
-#         and c.new_chat_member.status == "member"
-#         and (
-#             not c.old_chat_member
-#             or (c.old_chat_member and c.old_chat_member.status == "kicked")
-#         )
-#     ):
-#         bot.send_message(chat_id, f"gm, {c.from_user.first_name}")
-#
+@bot.chat_member_handler()
+def on_c(c: ChatMemberUpdated):
+    chat_id = c.chat.id
+    # Check if a new user has joined the group
+    if (
+        c.new_chat_member
+        and c.new_chat_member.status == "member"
+        and (not c.old_chat_member or c.old_chat_member.status in ["left", "kicked"])
+    ):
+        markup = InlineKeyboardMarkup()
+        group = InlineKeyboardButton(text="𝕏", url="https://x.com/btcindia_org")
+        markup.add(group)
+        random_emoji = random.choice(EMOJIS)
+        user = c.from_user.username if c.from_user.username else c.from_user.first_name
+        caption = (
+            f"Welcome {user} {random_emoji}\n"
+            "We are building BTC India 🇮🇳\n"
+            "This is the first Bitcoin ₿ focused conference and hackathon of India.\n"
+            "Follow us on our socials so you don't miss any updates!"
+        )
+        bot.send_photo(
+            chat_id,
+            "AgACAgUAAyEGAASLei_WAAOhZvz4UHdFg0ooL6XxClk8lMhjHqkAAmHCMRvbzOhXRv3armws5OoBAAMCAAN5AAM2BA",
+            caption=caption,
+            reply_markup=markup,
+        )
+
 
 # /askme [FAQ] use AI/ML if required
 # /speakers : list of speakers
@@ -324,5 +338,5 @@ bot.load_next_step_handlers()
 logger.info("Bot started and polling...")
 
 # Start polling (infinite loop to keep the bot running)
-# bot.infinity_polling(allowed_updates=update_types) # for welcome messages
-bot.infinity_polling()
+bot.infinity_polling(allowed_updates=update_types)  # for welcome messages
+# bot.infinity_polling()
