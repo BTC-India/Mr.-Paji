@@ -249,8 +249,7 @@ def inspire_quote(message):
 def hackathon(message):
     username = message.from_user.username
     chat_id = message.chat.id
-    logger.info(f"sending hackathon info to user: {
-                username} on chat_id: {chat_id}")
+    logger.info(f"sending hackathon info to user: {username} on chat_id: {chat_id}")
 
     # Crafting a more exciting and detailed response
     reply_message = (
