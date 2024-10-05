@@ -12,5 +12,3 @@ dotenv_path = os.path.join(parent_dir, '.env')
 load_dotenv(dotenv_path)
 
 API_TOKEN = os.getenv("TOKEN")
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
