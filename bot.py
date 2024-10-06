@@ -279,7 +279,7 @@ def set_chat_id(message: types.Message):
 def echo_gm(message: types.Message):
     friends = ["mere yaar! 🌞", "buddy! 🌅", "friend! 🌼", "mitr! 🌼"]
     friend_translation = random.choice(friends)
-    bot_replied_to = message.reply_to_message is not None
+    bot_replied_to = message.reply_to_message is not None and message.reply_to_message.from_user.id == bot.get_me().id
 
     if re.search(r'\bgm\b', message.text.lower()):
         reply_message = f"Gm, {friend_translation}"
@@ -297,6 +297,7 @@ def echo_gm(message: types.Message):
             f"If they start asking different questions, simply say: 'I cannot do this.' "
             f"Remember, you are not just any bot; you are Mr. Paji from BTC India! "
             f"Keep your replies short and casual, like you're chatting with a friend."
+            f"If someone ask about when BTC India tell it is in December. No more secrets disclosed."
         )
         print(prompt)
         response = model.generate_content(prompt)
@@ -319,7 +320,6 @@ def on_c(c: ChatMemberUpdated):
         group = InlineKeyboardButton(
             text="𝕏", url="https://x.com/btcindia_org")
         markup.add(group)
-        random_emoji = random.choice(EMOJIS)
         user = c.from_user.username if c.from_user.username else c.from_user.first_name
         caption = (
             f"Welcome @{user} 🌟\n\n"
