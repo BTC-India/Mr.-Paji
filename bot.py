@@ -48,8 +48,7 @@ def gm(message: types.Message):
     chat_id = message.chat.id
     random_emoji = random.choice(EMOJIS)
 
-    logger.info(
-        f"Received /gm or /start command from {username} (chat_id: {chat_id})")
+    logger.info(f"Received /gm or /start command from {username} (chat_id: {chat_id})")
     bot.reply_to(message, f"gm, {username} {random_emoji}")
 
 
@@ -129,14 +128,11 @@ def countdown(message: types.Message):
         if days_remaining > 0:
             response = f"Only {days_remaining} day(s) left! 🎉 Get excited! 🚀"
         elif hours_remaining > 0:
-            response = f"Just {
-                hours_remaining} hour(s) remaining! 🎉 Almost there! 🚀"
+            response = f"Just {hours_remaining} hour(s) remaining! 🎉 Almost there! 🚀"
         elif minutes_remaining > 0:
-            response = f"Only {
-                minutes_remaining} minute(s) to go! 🎉 The excitement is building! 🚀"
+            response = f"Only {minutes_remaining} minute(s) to go! 🎉 The excitement is building! 🚀"
         else:
-            response = f"Only {
-                seconds_remaining} second(s) left! 🎉 Get ready! 🚀"
+            response = f"Only {seconds_remaining} second(s) left! 🎉 Get ready! 🚀"
 
     bot.reply_to(message, response)
 
@@ -196,8 +192,7 @@ def inspire_quote(message):
                 "Sorry, couldn't fetch the quote at this time. Please try again later.",
             )
     except Exception as e:
-        bot.send_message(
-            chat_id, "An error occurred while fetching the quote.")
+        bot.send_message(chat_id, "An error occurred while fetching the quote.")
         logger.error(f"Error fetching quote: {e}")
 
 # Command - 8 : /hackathon: Send info about hackathon
@@ -205,8 +200,7 @@ def inspire_quote(message):
 def hackathon(message):
     username = message.from_user.username
     chat_id = message.chat.id
-    logger.info(f"sending hackathon info to user: {
-                username} on chat_id: {chat_id}")
+    logger.info(f"sending hackathon info to user: {username} on chat_id: {chat_id}")
 
     # Crafting a more exciting and detailed response
     reply_message = (
@@ -235,12 +229,10 @@ def send_location(message):
 def akkibhai(message: types.Message):
     username = message.from_user.username
     chat_id = message.chat.id
-    logger.info(f"Sending Akki Bhai message to user: {
-                username} on chat_id: {chat_id}")
+    logger.info(f"Sending Akki Bhai message to user: {username} on chat_id: {chat_id}")
 
     # Get the respons efrom genai
-    response = model.generate_content(
-        "Akki bhai is a nice man. Assume he is soon getting married to you, reply him in a funny way like I love u akki bhai. Use emojis, also you are free to send any other message except I love you, but be creative. Message should not exceed 5-10 words. Always tag @Aviraltech")
+    response = model.generate_content("Akki bhai is a nice man. Assume he is soon getting married to you, reply him in a funny way like I love u akki bhai. Use emojis, also you are free to send any other message except I love you, but be creative. Message should not exceed 5-10 words. Always tag @Aviraltech")
     reply_message = response.text
 
     # Send message
@@ -251,8 +243,7 @@ def akkibhai(message: types.Message):
 def bitcoin_og(message: types.Message):
     username = message.from_user.username
     chat_id = message.chat.id
-    logger.info(f"Sending bitcoin og message to user: {
-                username} on chat_id: {chat_id}")
+    logger.info(f"Sending bitcoin og message to user: {username} on chat_id: {chat_id}")
 
     response = model.generate_content("You need to tell something og about bitcoin not price and other things thing which people don't know generally. Limit your self to 2-4 lines max. Your answer should make people think something completely out of brain. Don't give facts which normal person already know. Also u can make that content as creative as you like. Use emojis also. U can use markdown and make more nice formatting. Try to give unique answer evertime.")
     reply_message = response.text
@@ -290,8 +281,7 @@ def echo_gm(message: types.Message):
         message_from_user = message.text
         original_message_text = message.reply_to_message.text
         prompt = (
-            f"Hey! The user just sent you this message: '{
-                message_from_user}'. "
+            f"Hey! The user just sent you this message: '{message_from_user}'. "
             f"Previously, you said: '{original_message_text}'. "
             f"Respond in a funny and friendly manner, using emojis where it feels right! "
             f"If they start asking different questions, simply say: 'I cannot do this.' "
@@ -388,16 +378,14 @@ def start_bot():
     logger.info("Scheduler starting :|")
     scheduler = BackgroundScheduler()
     # Start the scheduler in the background
-    reminder_job = scheduler.add_job(
-        send_btc_hour_reminder, 'cron', day_of_week='sat', hour=20, minute=0, timezone='Asia/Kolkata')
+    reminder_job = scheduler.add_job(send_btc_hour_reminder, 'cron', day_of_week='sat', hour=20, minute=0, timezone='Asia/Kolkata')
     price_job = scheduler.add_job(send_price, 'interval', seconds=60*60*6)
     scheduler.start()
     logger.info("Scheduler started :)")
-    logger.info(f"First execution of price job: {
-                format_time(price_job.next_run_time)}")
-    logger.info(f"First execution of reminder job: {
-                format_time(reminder_job.next_run_time)}")
+    logger.info(f"First execution of price job: {format_time(price_job.next_run_time)}")
+    logger.info(f"First execution of reminder job: {format_time(reminder_job.next_run_time)}")
 
+    # Start polling
     bot.infinity_polling(allowed_updates=update_types)
 
 
