@@ -12,3 +12,4 @@ dotenv_path = os.path.join(parent_dir, '.env')
 load_dotenv(dotenv_path)
 
 API_TOKEN = os.getenv("TOKEN")
+GEMINI_API_KEY=os.getenv("GEMINI_API_KEY")

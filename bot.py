@@ -1,73 +1,74 @@
-import requests
+import re
 import logging
-import time
-import schedule
-import random
 import telebot
+import requests
 from datetime import datetime
-from configuration.config import API_TOKEN
+from configuration.config import API_TOKEN, GEMINI_API_KEY
 from utils.emojis import EMOJIS
-import utils.logger as logger_save
+import google.generativeai as genai
 from telebot.util import update_types
 from telebot.types import (
-    InputFile,
-    InputMediaPhoto,
-    ReplyKeyboardMarkup,
-    KeyboardButton,
     ChatMemberUpdated,
     InlineKeyboardMarkup,
     InlineKeyboardButton,
 )
-import re
-
-
-#########  Initialisation of the stuff   ##########
+import random
+from telebot import types
+from apscheduler.schedulers.background import BackgroundScheduler
+import pytz
 
 # Configuring logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
 logger = logging.getLogger(__name__)
-# Initialize your custom logger (assuming it writes to a file)
-logger_save.init_logger(f"logs/botlog.log")
+
+# Suppress logging from `urllib3` and other external libraries
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+
 # Initializing bot with 4 thread workers for handling multiple requests
 bot = telebot.TeleBot(API_TOKEN, threaded=True, num_threads=4)
 
+# Chat Id of the group
+CHAT_ID = ""
 
-#########  Bot Commands and responses  ##########
+# Initialize gemini models
+genai.configure(api_key=GEMINI_API_KEY)
+generation_config = genai.GenerationConfig(max_output_tokens=1500)
+model = genai.GenerativeModel(model_name='gemini-1.5-flash', generation_config=generation_config, safety_settings={
+    "SEXUALLY_EXPLICIT": 'block_none'
+})
 
-# /gm command handler
+# Command handlers
+# Command - 1: /gm: Say gm
 @bot.message_handler(commands=["gm", "start"])
-def gm(message):
+def gm(message: types.Message):
     username = message.from_user.username
     chat_id = message.chat.id
     random_emoji = random.choice(EMOJIS)
 
-    # Logging when a user sends a /gm command
-    logger.info(f"Received /gm command from {username} (chat_id: {chat_id})")
-
-    # Respond to the user with a good morning message
-    # bot.send_message(chat_id, f"gm, {username} {random_emoji}")
+    logger.info(
+        f"Received /gm or /start command from {username} (chat_id: {chat_id})")
     bot.reply_to(message, f"gm, {username} {random_emoji}")
-    return
 
 
-# /whitepaper command handler
+# Command - 2:  /whitepaper: Shows the Bitcoin whitepaper
 @bot.message_handler(commands=["whitepaper"])
-def white_paper(message):
+def white_paper(message: types.Message):
     chat_id = message.chat.id
-    # log when user requests the whitepaper
-    logger.info(f"sending whitepaper to user with chat_id: {chat_id}")
+    logger.info(f"Sending whitepaper to user: {message.from_user.username}")
 
     try:
         bot.send_document(
             chat_id,
-            "BQACAgUAAyEGAASMAc6ZAAM3ZvKSFE1Mj4ZJ3MksBalRTIF15s8AAtsTAAI0JphXM7E_jzcS-X42BA",
+            "https://bitcoin.org/bitcoin.pdf",
         )
-        logger.info("whitepaper sent successfully")
-    except Exception as e:  # Use 'Exception' to catch errors
-        logger.error(f"failed to send whitepaper: {e}")
+        logger.info("Whitepaper sent successfully")
+    except Exception as e:
+        logger.error(f"Failed to send whitepaper: {e}")
 
-
-# /price : shows realtime value of BTC in INR
+# Command - 3: /price : shows realtime value of BTC in INR
 @bot.message_handler(commands=["price"])
 def price(message):
     chat_id = message.chat.id
@@ -86,19 +87,7 @@ def price(message):
     except Exception as e:
         logger.error(f"failed to fetch btc value: {e}")
 
-
-# Schedule to send Bitcoin price every 6 hours
-def schedule_btc_updates():
-    # Schedule the task every 6 hours
-    schedule.every(6).hours.do(price)
-
-    # Keep the schedule running in an infinite loop
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
-
-
-# /social shares social links
+# Command - 4: /social: shares social links
 @bot.message_handler(commands=["social"])
 def social(message):
     username = message.from_user.username
@@ -119,71 +108,39 @@ def social(message):
     )
 
 
-# /countdown : countdown till event
+# Command - 5: /countdown : countdown till event
 @bot.message_handler(commands=["countdown"])
-def countdown(message):
+def countdown(message: types.Message):
     username = message.from_user.username
     chat_id = message.chat.id
-    logger.info(f"sending countdown to user: {username} on chat_id: {chat_id}")
-    today = datetime.today()
-    target_date = datetime(today.year, 12, 16)
-    days_remaining = (target_date - today).days
-    print(f"Days remaining until December 1: {days_remaining}")
-    bot.reply_to(message, f"{days_remaining} more to go! 🚀")
+    logger.info(f"Sending countdown to user: {username} on chat_id: {chat_id}")
 
+    today = datetime.now()
+    target_date = datetime(today.year, 12, 16, 10, 0, 0)
 
-# # Command to show the keyboard with an inline button
-# @bot.message_handler(commands=["resp"])
-# def reply(message):
-#     chat_id = message.chat.id
-#
-#     # Create an Inline Keyboard with a button
-#     keyboard = InlineKeyboardMarkup()
-#     button = InlineKeyboardButton(text="Received", callback_data="received")
-#
-#     button2 = InlineKeyboardButton(text="Not Received ", callback_data="nreceived")
-#     keyboard.add(button)
-#     keyboard.add(button2)
-#
-#     bot.send_message(
-#         chat_id, "Click the button to submit your info", reply_markup=keyboard
-#     )
-#
-#
-# @bot.message_handler(content_types=["photo"])
-# def handle_photo(message):
-#     # chat_id = message.chat.id
-#     chat_id = -1002340040662
-#     photo = message.photo[-1].file_id  # Get the highest resolution photo
-#     keyboard = InlineKeyboardMarkup()
-#     button = InlineKeyboardButton(text="Received", callback_data="received")
-#
-#     button2 = InlineKeyboardButton(text="Not Received ", callback_data="nreceived")
-#     keyboard.add(button)
-#     keyboard.add(button2)
-#
-#     # Log info
-#     bot.send_message(chat_id, "Photo received. Sending it back to you...")
-#
-#     # Send the photo back to the user
-#     bot.send_photo(
-#         chat_id, photo, caption="Here is the photo you sent!", reply_markup=keyboard
-#     )
-#
-#
-# # Handle the button click with callback_data
-# @bot.callback_query_handler(func=lambda call: True)
-# def handle_callback_query(call):
-#     user_chat_id = 990333293
-#     if call.data == "received":
-#         bot.send_message(user_chat_id, "Received")
-#     if call.data == "nreceived":
-#         bot.send_message(user_chat_id, "Not Received")
-#         # Here you can set up further handling to receive user input
-#
+    if today >= target_date:
+        response = "The event is live now! 🎉🚀 Let's go!"
+    else:
+        difference = target_date - today
+        days_remaining = difference.days
+        hours_remaining, remainder = divmod(difference.seconds, 3600)
+        minutes_remaining, seconds_remaining = divmod(remainder, 60)
 
+        if days_remaining > 0:
+            response = f"Only {days_remaining} day(s) left! 🎉 Get excited! 🚀"
+        elif hours_remaining > 0:
+            response = f"Just {
+                hours_remaining} hour(s) remaining! 🎉 Almost there! 🚀"
+        elif minutes_remaining > 0:
+            response = f"Only {
+                minutes_remaining} minute(s) to go! 🎉 The excitement is building! 🚀"
+        else:
+            response = f"Only {
+                seconds_remaining} second(s) left! 🎉 Get ready! 🚀"
 
-# /satoshi command handler
+    bot.reply_to(message, response)
+
+# Command - 6 : /satoshi: Send information about satoshi
 @bot.message_handler(commands=["satoshi"])
 def satoshi_info(message):
     chat_id = message.chat.id
@@ -213,7 +170,7 @@ def satoshi_info(message):
     )
 
 
-# /inspire command handler
+# Command - 7 : /inspire: Send a nice quote
 @bot.message_handler(commands=["inspire"])
 def inspire_quote(message):
     chat_id = message.chat.id
@@ -243,13 +200,13 @@ def inspire_quote(message):
             chat_id, "An error occurred while fetching the quote.")
         logger.error(f"Error fetching quote: {e}")
 
-
-# /hackathon command handler
+# Command - 8 : /hackathon: Send info about hackathon
 @bot.message_handler(commands=["hackathon"])
 def hackathon(message):
     username = message.from_user.username
     chat_id = message.chat.id
-    logger.info(f"sending hackathon info to user: {username} on chat_id: {chat_id}")
+    logger.info(f"sending hackathon info to user: {
+                username} on chat_id: {chat_id}")
 
     # Crafting a more exciting and detailed response
     reply_message = (
@@ -260,23 +217,7 @@ def hackathon(message):
     # Sending the reply
     bot.reply_to(message, reply_message, parse_mode="Markdown")
 
-
-@bot.message_handler(commands=["akkibhai"])
-def hackathon(message):
-    username = message.from_user.username
-    chat_id = message.chat.id
-    # logger.info(f"sending hackathon info to user: {username} on chat_id: {chat_id}")
-
-    # Crafting a more exciting and detailed response
-    reply_message = (
-        "I love u akki bhai! Rishta bakka? Shaadi kar le 😘😘."
-    )
-
-    # Sending the reply
-    bot.reply_to(message, reply_message, parse_mode="Markdown")
-
-
-# /venue command handler
+# Command - 9 :/venue: Send the venue
 @bot.message_handler(commands=["venue"])
 def send_location(message):
     chat_id = message.chat.id
@@ -289,33 +230,82 @@ def send_location(message):
     # Sending the location
     bot.send_location(chat_id, latitude, longitude)
 
+# Command - 10: /akkibhai: Feature akki bhai - Gemini
+@bot.message_handler(commands=["akkibhai"])
+def akkibhai(message: types.Message):
+    username = message.from_user.username
+    chat_id = message.chat.id
+    logger.info(f"Sending Akki Bhai message to user: {
+                username} on chat_id: {chat_id}")
+
+    # Get the respons efrom genai
+    response = model.generate_content(
+        "Akki bhai is a nice man. Assume he is soon getting married to you, reply him in a funny way like I love u akki bhai. Use emojis, also you are free to send any other message except I love you, but be creative. Message should not exceed 5-10 words. Always tag @Aviraltech")
+    reply_message = response.text
+
+    # Send message
+    bot.send_message(chat_id, reply_message, parse_mode="Markdown")
+
+# Command - 11: /bitcoinog: Feature bitcoin
+@bot.message_handler(commands=["bitcoinog"])
+def bitcoin_og(message: types.Message):
+    username = message.from_user.username
+    chat_id = message.chat.id
+    logger.info(f"Sending bitcoin og message to user: {
+                username} on chat_id: {chat_id}")
+
+    response = model.generate_content("You need to tell something og about bitcoin not price and other things thing which people don't know generally. Limit your self to 2-4 lines max. Your answer should make people think something completely out of brain. Don't give facts which normal person already know. Also u can make that content as creative as you like. Use emojis also. U can use markdown and make more nice formatting. Try to give unique answer evertime.")
+    reply_message = response.text
+
+    bot.send_message(chat_id, reply_message, parse_mode="Markdown")
+
+# Command - 12: '/chatid: Set the chatid
+@bot.message_handler(commands=["set_chatid"])
+def set_chat_id(message: types.Message):
+    global CHAT_ID
+    chat_id = message.chat.id
+    user_name = message.from_user.username
+    if user_name == "scienmanas":
+        CHAT_ID = chat_id
+        logging.info(f"Chat id set to: {CHAT_ID}")
+        bot.reply_to(message, f"Chat Id set successfully :)")
+    else:
+        logging.info("Not authorized")
+        bot.reply_to(message, "Sorry you are not authorized!")
+
 
 # reply to gm messages
 @bot.message_handler(func=lambda msg: True)
-def echo_all(message):
-    # List of 'friend' in different languages
-    friends = [
-        "amigo",
-        "freund",
-        "ami",
-        "kaibigan",
-        "친구",
-        "友達",
-        "приятель",
-        "amico",
-        "dost",
-        "phít",
-    ]
-    print("***************************************************************")
-    print(message.text.lower())
-    print("***************************************************************")
+def echo_gm(message: types.Message):
+    friends = ["mere yaar! 🌞", "buddy! 🌅", "friend! 🌼", "mitr! 🌼"]
+    friend_translation = random.choice(friends)
+    bot_replied_to = message.reply_to_message is not None
+
     if re.search(r'\bgm\b', message.text.lower()):
-        friend_translation = random.choice(friends)
-        reply_message = f"gm, mere yaar!"
+        reply_message = f"Gm, {friend_translation}"
+        logging.info("Sending gm")
         bot.reply_to(message, reply_message)
+    elif bot_replied_to:
+        # Get the text of the message that the user is replying to
+        message_from_user = message.text
+        original_message_text = message.reply_to_message.text
+        prompt = (
+            f"Hey! The user just sent you this message: '{
+                message_from_user}'. "
+            f"Previously, you said: '{original_message_text}'. "
+            f"Respond in a funny and friendly manner, using emojis where it feels right! "
+            f"If they start asking different questions, simply say: 'I cannot do this.' "
+            f"Remember, you are not just any bot; you are Mr. Paji from BTC India! "
+            f"Keep your replies short and casual, like you're chatting with a friend."
+        )
+        print(prompt)
+        response = model.generate_content(prompt)
+
+        reply_message = response.text
+        bot.reply_to(message, reply_message, parse_mode="Markdown")
 
 
-# welcome
+# Welcome Message to new joiners
 @bot.chat_member_handler()
 def on_c(c: ChatMemberUpdated):
     chat_id = c.chat.id
@@ -332,34 +322,85 @@ def on_c(c: ChatMemberUpdated):
         random_emoji = random.choice(EMOJIS)
         user = c.from_user.username if c.from_user.username else c.from_user.first_name
         caption = (
-            f"Welcome {user} {random_emoji}\n"
-            "We are building BTC India 🇮🇳\n"
-            "This is the first Bitcoin ₿ focused conference and hackathon of India.\n"
+            f"Welcome @{user} 🌟\n\n"
+            "We are building BTC India 🇮🇳. A Bitcoin ₿ focused conf + hackathon.\n"
             "Follow us on our socials so you don't miss any updates!"
         )
         bot.send_photo(
             chat_id,
-            "AgACAgUAAyEGAASLei_WAAOhZvz4UHdFg0ooL6XxClk8lMhjHqkAAmHCMRvbzOhXRv3armws5OoBAAMCAAN5AAM2BA",
+            "https://i.ibb.co/MfQBsbf/photo-6294318673468440527-y-1.jpg",
             caption=caption,
             reply_markup=markup,
         )
 
+# Scheduler function
+def send_btc_hour_reminder():
+    reminder_message = (
+        f"🚀 Reminder: BTC Hour is happening in 1 hour! 🕰\n\n"
+        f"Join us at 9 pm for an exciting discussion "
+        f"about the latest in Bitcoin and cryptocurrency.\n\n"
+        f"Don't miss out on this opportunity to learn, share, and connect with fellow enthusiasts! 💡🌐"
+    )
+    try:
+        bot.send_message(chat_id=CHAT_ID, text=reminder_message)
+        logger.info(f"Sent BTC Hour reminder to group")
+    except Exception as e:
+        logger.error(f"Failed to send BTC Hour reminder: {e}")
 
-# /askme [FAQ] use AI/ML if required
-# /speakers : list of speakers
-# /workshops : details of workshops
-# /hackathon : hackathon details
 
-# Enable saving next step handlers to file "./.handlers-saves/step.save"
-bot.enable_save_next_step_handlers(delay=2)
+def send_price():
+    # log when user requests the value
+    logger.info(f"sending btc value")
+    try:
+        url = "https://api.coinpaprika.com/v1/coins/btc-bitcoin/markets/?quotes=INR"
+        response = requests.get(url).json()
+        print("response", type(response))
+        inr_value = response[0]["quotes"]["INR"]["price"]
+        print("INR VALUE:", inr_value)
+        formatted_value = (
+            f"{inr_value:,.2f}"  # Adds commas and rounds to 2 decimal places
+        )
+        bot.send_message(chat_id=CHAT_ID, text=f"1 BTC = ₹{formatted_value}")
+    except Exception as e:
+        logger.error(f"failed to fetch btc value: {e}")
+
 
 # Load next step handlers from the save file
+bot.enable_save_next_step_handlers(delay=2)
 bot.load_next_step_handlers()
 
-# Logging bot start
-logger.info("Bot started and polling...")
+# Function to format datetime in a nice way
 
-# Start polling (infinite loop to keep the bot running)
+
+def format_time(dt):
+    ist = pytz.timezone('Asia/Kolkata')  # Set the timezone to IST
+    dt_ist = dt.astimezone(ist)  # Convert the time to IST
+    # Format the datetime
+    return dt_ist.strftime("%B %d, %Y, at time: %H:%M:%S")
+
+
+# Main function to start the bot
 def start_bot():
-    bot.infinity_polling(allowed_updates=update_types)  # for welcome messages
+    logger.info("Starting the bot :|")
+    logging.info("Bot started :)")
+
+    # Initialize the scheduler
+    logger.info("Scheduler starting :|")
+    scheduler = BackgroundScheduler()
+    # Start the scheduler in the background
+    reminder_job = scheduler.add_job(
+        send_btc_hour_reminder, 'cron', day_of_week='sat', hour=20, minute=0, timezone='Asia/Kolkata')
+    price_job = scheduler.add_job(send_price, 'interval', seconds=60*60*6)
+    scheduler.start()
+    logger.info("Scheduler started :)")
+    logger.info(f"First execution of price job: {
+                format_time(price_job.next_run_time)}")
+    logger.info(f"First execution of reminder job: {
+                format_time(reminder_job.next_run_time)}")
+
+    bot.infinity_polling(allowed_updates=update_types)
+
+
+if __name__ == "__main__":
+    start_bot()
 
