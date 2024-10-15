@@ -207,7 +207,7 @@ def hackathon(message):
     # Crafting a more exciting and detailed response
     reply_message = (
         "🚀 *Get Ready for an Epic 60-Hour Hackathon!* 🎉\n"
-        "Scheduled between *16-19 December, 2024* ⏳"
+        "Scheduled between *16-18 December, 2024* ⏳"
     )
 
     # Sending the reply
