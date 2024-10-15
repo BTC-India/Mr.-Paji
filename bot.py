@@ -258,7 +258,7 @@ def set_chat_id(message: types.Message):
     global CHAT_ID
     chat_id = message.chat.id
     user_name = message.from_user.username
-    if user_name == "scienmanas":
+    if user_name == "scienmanas" or user_name == "krn_gill_TBH":
         CHAT_ID = chat_id
         logging.info(f"Chat id set to: {CHAT_ID}")
         sent_message = bot.reply_to(message, f"Chat Id set successfully :) to: {CHAT_ID}")
@@ -267,7 +267,8 @@ def set_chat_id(message: types.Message):
         sent_message = bot.reply_to(message, "Sorry you are not authorized!")
 
     # Delete the message
-    Timer(10.0, lambda: bot.delete_message(chat_id, sent_message.message_id)).start()
+    Timer(2.0, lambda: bot.delete_message(chat_id, sent_message.message_id)).start()
+    Timer(2.0, lambda: bot.delete_message(chat_id, message.message_id)).start()
 
 
 @bot.message_handler(commands=["welcome_settings"])
@@ -275,9 +276,11 @@ def toggle_welcome_settings(message: types.Message):
     global WELCOME_NEW_MEMBER
     username = message.from_user.username
     chat_id = message.chat.id
+    # Delete user message
+    Timer(2.0, lambda: bot.delete_message(chat_id, message.message_id)).start()
 
     # Check if the user is "scienamans"
-    if username == "scienmanas":
+    if username == "scienmanas" or username == "krn_gill_TBH":
         # Create buttons for toggling welcome setting
         markup = types.InlineKeyboardMarkup()
         btn_true = types.InlineKeyboardButton(text="True", callback_data="set_true")
@@ -288,20 +291,20 @@ def toggle_welcome_settings(message: types.Message):
         current_status = "ON" if WELCOME_NEW_MEMBER else "OFF"
         sent_message = bot.send_message(
             chat_id, 
-            f"Welcoming new members is currently: *{current_status}*",
+            f"Welcoming new members is currently: *{'ON' if WELCOME_NEW_MEMBER else 'OFF'}*",
             reply_markup=markup,
             parse_mode="Markdown"
         )
 
         # Delete the message after 5 seconds
-        Timer(5.0, lambda: bot.delete_message(chat_id, sent_message.message_id)).start()
+        Timer(2.0, lambda: bot.delete_message(chat_id, sent_message.message_id)).start()
     
     else:
         # Unauthorized user
         sent_message = bot.send_message(chat_id, "Unauthorized!")
         
         # Delete the message after 5 seconds
-        Timer(5.0, lambda: bot.delete_message(chat_id, sent_message.message_id)).start()
+        Timer(2.0, lambda: bot.delete_message(chat_id, sent_message.message_id)).start()
 
 # Callback function to handle button clicks
 @bot.callback_query_handler(func=lambda call: call.data in ["set_true", "set_false"])
@@ -321,7 +324,7 @@ def handle_callback_query(call):
     confirmation_message = bot.send_message(chat_id, f"Welcome setting updated to {WELCOME_NEW_MEMBER}")
 
     # Delete confirmation message after 5 seconds
-    Timer(5.0, lambda: bot.delete_message(chat_id, confirmation_message.message_id)).start()
+    Timer(2.0, lambda: bot.delete_message(chat_id, confirmation_message.message_id)).start()
 
 # reply to gm messages
 @bot.message_handler(func=lambda msg: True)
