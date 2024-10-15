@@ -16,6 +16,7 @@ import random
 from telebot import types
 from apscheduler.schedulers.background import BackgroundScheduler
 import pytz
+from threading import Timer
 
 # Configuring logging
 logging.basicConfig(
@@ -32,6 +33,7 @@ bot = telebot.TeleBot(API_TOKEN, threaded=True, num_threads=4)
 
 # Chat Id of the group
 CHAT_ID = ""
+WELCOME_NEW_MEMBER = False
 
 # Initialize gemini models
 genai.configure(api_key=GEMINI_API_KEY)
@@ -94,10 +96,10 @@ def social(message):
     logger.info(f"sending social link user: {username} on chat_id: {chat_id}")
 
     markup = InlineKeyboardMarkup()
-    group = InlineKeyboardButton(text="𝕏", url="https://x.com/btcindia_org")
-
+    x_link = InlineKeyboardButton(text="𝕏", url="https://x.com/btcindia_org")
+    webiste_link = InlineKeyboardButton(text="🌐", url="https://btc-india.org")
     # add the button to markup
-    markup.add(group)
+    markup.add(x_link, webiste_link)
 
     # display this markup:
     bot.reply_to(
@@ -204,8 +206,8 @@ def hackathon(message):
 
     # Crafting a more exciting and detailed response
     reply_message = (
-        "🚀 *Get Ready for an Epic 60-Hour Hackathon!* 💻\n\n"
-        "More details coming soon! Stay tuned.. ⏳"
+        "🚀 *Get Ready for an Epic 60-Hour Hackathon!* 🎉\n"
+        "Scheduled between *16-19 December, 2024* ⏳"
     )
 
     # Sending the reply
@@ -259,11 +261,67 @@ def set_chat_id(message: types.Message):
     if user_name == "scienmanas":
         CHAT_ID = chat_id
         logging.info(f"Chat id set to: {CHAT_ID}")
-        bot.reply_to(message, f"Chat Id set successfully :)")
+        sent_message = bot.reply_to(message, f"Chat Id set successfully :) to: {CHAT_ID}")
     else:
         logging.info("Not authorized")
-        bot.reply_to(message, "Sorry you are not authorized!")
+        sent_message = bot.reply_to(message, "Sorry you are not authorized!")
 
+    # Delete the message
+    Timer(10.0, lambda: bot.delete_message(chat_id, sent_message.message_id)).start()
+
+
+@bot.message_handler(commands=["welcome_settings"])
+def toggle_welcome_settings(message: types.Message):
+    global WELCOME_NEW_MEMBER
+    username = message.from_user.username
+    chat_id = message.chat.id
+
+    # Check if the user is "scienamans"
+    if username == "scienmanas":
+        # Create buttons for toggling welcome setting
+        markup = types.InlineKeyboardMarkup()
+        btn_true = types.InlineKeyboardButton(text="True", callback_data="set_true")
+        btn_false = types.InlineKeyboardButton(text="False", callback_data="set_false")
+        markup.add(btn_true, btn_false)
+        
+        # Send the message with buttons
+        current_status = "ON" if WELCOME_NEW_MEMBER else "OFF"
+        sent_message = bot.send_message(
+            chat_id, 
+            f"Welcoming new members is currently: *{current_status}*",
+            reply_markup=markup,
+            parse_mode="Markdown"
+        )
+
+        # Delete the message after 5 seconds
+        Timer(5.0, lambda: bot.delete_message(chat_id, sent_message.message_id)).start()
+    
+    else:
+        # Unauthorized user
+        sent_message = bot.send_message(chat_id, "Unauthorized!")
+        
+        # Delete the message after 5 seconds
+        Timer(5.0, lambda: bot.delete_message(chat_id, sent_message.message_id)).start()
+
+# Callback function to handle button clicks
+@bot.callback_query_handler(func=lambda call: call.data in ["set_true", "set_false"])
+def handle_callback_query(call):
+    global WELCOME_NEW_MEMBER
+    chat_id = call.message.chat.id
+
+    # Set the welcome setting based on button click
+    if call.data == "set_true":
+        WELCOME_NEW_MEMBER = True
+        bot.answer_callback_query(call.id, "Welcomimg new members is now on!")
+    elif call.data == "set_false":
+        WELCOME_NEW_MEMBER = False
+        bot.answer_callback_query(call.id, "Welcoming new members is now off!")
+
+    # Send confirmation message
+    confirmation_message = bot.send_message(chat_id, f"Welcome setting updated to {WELCOME_NEW_MEMBER}")
+
+    # Delete confirmation message after 5 seconds
+    Timer(5.0, lambda: bot.delete_message(chat_id, confirmation_message.message_id)).start()
 
 # reply to gm messages
 @bot.message_handler(func=lambda msg: True)
@@ -287,7 +345,11 @@ def echo_gm(message: types.Message):
             f"If they start asking different questions, simply say: 'I cannot do this.' "
             f"Remember, you are not just any bot; you are Mr. Paji from BTC India! "
             f"Keep your replies short and casual, like you're chatting with a friend."
-            f"If someone ask about when BTC India tell it is in December. No more secrets disclosed."
+            f"Here is the information about BTC India that you may need:"
+            f"1. BTC India in scheduled from 16th-18th December 2024."
+            f"2. Its gonna be biggest bitcoin event in the Asia."
+            f"3. Its a hackathon + conference event."
+            f"4. Website is launched and link is: 'https://btc-india.org'."
         )
         print(prompt)
         response = model.generate_content(prompt)
@@ -299,29 +361,27 @@ def echo_gm(message: types.Message):
 # Welcome Message to new joiners
 @bot.chat_member_handler()
 def on_c(c: ChatMemberUpdated):
-    chat_id = c.chat.id
-    # Check if a new user has joined the group
-    if (
-        c.new_chat_member
-        and c.new_chat_member.status == "member"
-        and (not c.old_chat_member or c.old_chat_member.status in ["left", "kicked"])
-    ):
-        markup = InlineKeyboardMarkup()
-        group = InlineKeyboardButton(
-            text="𝕏", url="https://x.com/btcindia_org")
-        markup.add(group)
-        user = c.from_user.username if c.from_user.username else c.from_user.first_name
-        caption = (
-            f"Welcome @{user} 🌟\n\n"
-            "We are building BTC India 🇮🇳. A Bitcoin ₿ focused conf + hackathon.\n"
-            "Follow us on our socials so you don't miss any updates!"
-        )
-        bot.send_photo(
-            chat_id,
-            "https://i.ibb.co/MfQBsbf/photo-6294318673468440527-y-1.jpg",
-            caption=caption,
-            reply_markup=markup,
-        )
+    global WELCOME_NEW_MEMBER
+    if WELCOME_NEW_MEMBER: 
+        chat_id = c.chat.id
+        # Check if a new user has joined the group
+        if (
+            c.new_chat_member
+            and c.new_chat_member.status == "member"
+            and (not c.old_chat_member or c.old_chat_member.status in ["left",  "kicked"])
+            ):
+            markup = InlineKeyboardMarkup()
+            group_link = InlineKeyboardButton(
+                text="𝕏", url="https://x.com/btcindia_org")
+            webiste_link = InlineKeyboardButton(text="🌐", url="https://btc-india.org")
+            markup.add(group_link, webiste_link)
+            user = c.from_user.username if c.from_user.username else c.from_user.first_name
+
+            sent_message =  f"Welcome @{user} 🌟\n\nWe are building BTC India 🇮🇳. A ₿ focused conf + hackathon.\nFollow us on our socials so you don't miss any updates!"
+
+            # Delete the message
+            Timer(10.0, lambda: bot.delete_message(chat_id, sent_message.message_id)).start()
+
 
 # Scheduler function
 def send_btc_hour_reminder():
